@@ -12,19 +12,19 @@ import matplotlib.pyplot as plt
 # ==============================================================================
 print("--- Running Program 1 ---")
 # 1. Dummy Data (Logical OR Gate)
-X_p1 = np.array([[0,0], [0,1], [1,0], [1,1]], dtype=float)
-y_p1 = np.array([[0], [1], [1], [1]], dtype=float)
+x_train = np.array([[0,0], [0,1], [1,0], [1,1]], dtype=float)
+y_train = np.array([[0], [1], [1], [1]], dtype=float)
 
 # 2. Build and Train
-model_p1 = tf.keras.Sequential([
+model = tf.keras.Sequential([
     tf.keras.layers.Dense(1, input_shape=(2,), activation='sigmoid')
 ])
-model_p1.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-model_p1.fit(X_p1, y_p1, epochs=500, verbose=0)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=500, verbose=0)
 
 # 3. Evaluate
-loss_1, acc_1 = model_p1.evaluate(X_p1, y_p1, verbose=0)
-print(f"Program 1 - Accuracy: {acc_1:.4f}\n")
+loss, accuracy = model.evaluate(x_train, y_train, verbose=0)
+print(f"Program 1 - Accuracy: {accuracy:.4f}\n")
 
 
 # ==============================================================================
@@ -34,28 +34,28 @@ print(f"Program 1 - Accuracy: {acc_1:.4f}\n")
 # ==============================================================================
 print("--- Running Program 2 ---")
 # 1. Load and Prep Data
-(X_train_p2, y_train_p2), (X_test_p2, y_test_p2) = tf.keras.datasets.mnist.load_data()
-X_train_p2 = X_train_p2.reshape(-1, 784) / 255.0
-X_test_p2 = X_test_p2.reshape(-1, 784) / 255.0
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train = x_train.reshape(-1, 784) / 255.0
+x_test = x_test.reshape(-1, 784) / 255.0
 
 # 2. Build Model
-model_p2 = tf.keras.Sequential([
+model = tf.keras.Sequential([
     tf.keras.layers.Dense(128, activation='relu', input_shape=(784,)),
     tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
 # 3. Compile and Train
-model_p2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-history_p2 = model_p2.fit(X_train_p2, y_train_p2, epochs=10, batch_size=32, validation_split=0.2, verbose=0)
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history = model.fit(x_train, y_train, epochs=10, batch_size=32, validation_split=0.2, verbose=0)
 
 # 4. Evaluate and Plot
-loss_p2, acc_p2 = model_p2.evaluate(X_test_p2, y_test_p2, verbose=0)
-print(f"Program 2 - Test Accuracy: {acc_p2:.4f}")
+loss, accuracy = model.evaluate(x_test, y_test, verbose=0)
+print(f"Program 2 - Test Accuracy: {accuracy:.4f}")
 
 plt.figure()
-plt.plot(history_p2.history['accuracy'], label='Train Accuracy')
-plt.plot(history_p2.history['val_accuracy'], label='Validation Accuracy')
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.title('Program 2: Model Accuracy')
@@ -69,7 +69,12 @@ plt.show()
 # affect a neural network's ability to learn using the MNIST dataset.
 # ==============================================================================
 print("--- Running Program 3 ---")
-def create_model_p3(af):
+# Re-load data to ensure clean state
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train = x_train.reshape(-1, 784) / 255.0
+x_test = x_test.reshape(-1, 784) / 255.0
+
+def create_model(af):
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(128, activation=af, input_shape=(784,)),
         tf.keras.layers.Dense(64, activation=af),
@@ -79,17 +84,17 @@ def create_model_p3(af):
     return model
 
 activation_functions = ['sigmoid', 'tanh', 'relu']
-results_p3 = {}
+results = {}
 
 for activation in activation_functions:
     print(f"Training with {activation}...")
-    model = create_model_p3(activation)
-    history = model.fit(X_train_p2, y_train_p2, epochs=5, batch_size=32, validation_data=(X_test_p2, y_test_p2), verbose=0)
-    results_p3[activation] = history
+    model = create_model(activation)
+    history = model.fit(x_train, y_train, epochs=5, batch_size=32, validation_data=(x_test, y_test), verbose=0)
+    results[activation] = history
 
 plt.figure(figsize=(10, 6))
 for activation in activation_functions:
-    plt.plot(results_p3[activation].history['val_accuracy'], label=f"{activation} Validation")
+    plt.plot(results[activation].history['val_accuracy'], label=f"{activation} Validation")
 plt.title('Program 3: Activation Function Showdown')
 plt.xlabel('Epochs')
 plt.ylabel('Validation Accuracy')
@@ -103,10 +108,10 @@ plt.show()
 # and compare three different optimizers (SGD, Adam, RMSprop).
 # ==============================================================================
 print("--- Running Program 4 ---")
-(X_train_p4, y_train_p4), (X_test_p4, y_test_p4) = tf.keras.datasets.cifar10.load_data()
-X_train_p4, X_test_p4 = X_train_p4 / 255.0, X_test_p4 / 255.0
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
 
-def build_and_train_p4(optimizer_name):
+def build_and_train_model(optimizer_name):
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(32, 32, 3)),
         tf.keras.layers.MaxPooling2D((2,2)),
@@ -115,19 +120,19 @@ def build_and_train_p4(optimizer_name):
         tf.keras.layers.Dense(10, activation='softmax')
     ])
     model.compile(optimizer=optimizer_name, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    history = model.fit(X_train_p4, y_train_p4, epochs=5, batch_size=64, validation_data=(X_test_p4, y_test_p4), verbose=0)
+    history = model.fit(x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test), verbose=0)
     return history
 
 optimizers = ['sgd', 'rmsprop', 'adam']
-histories_p4 = {}
+histories = {}
 
 for opt in optimizers:
     print(f"Training with {opt}...")
-    histories_p4[opt] = build_and_train_p4(opt)
+    histories[opt] = build_and_train_model(opt)
 
 plt.figure(figsize=(10, 6))
 for name in optimizers:
-    plt.plot(histories_p4[name].history['val_accuracy'], label=f'{name.upper()} Val', linestyle='--')
+    plt.plot(histories[name].history['val_accuracy'], label=f'{name.upper()} Val', linestyle='--')
 plt.title('Program 4: Optimizer Race')
 plt.xlabel('Epoch')
 plt.ylabel('Validation Accuracy')
@@ -141,11 +146,11 @@ plt.show()
 # overfitting on the Fashion MNIST dataset.
 # ==============================================================================
 print("--- Running Program 5 ---")
-(X_train_p5, y_train_p5), (X_test_p5, y_test_p5) = tf.keras.datasets.fashion_mnist.load_data()
-X_train_p5 = X_train_p5.reshape(-1, 784) / 255.0
-X_test_p5 = X_test_p5.reshape(-1, 784) / 255.0
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+x_train = x_train.reshape(-1, 784) / 255.0
+x_test = x_test.reshape(-1, 784) / 255.0
 
-model_p5 = tf.keras.Sequential([
+model = tf.keras.Sequential([
     tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(1e-4), input_shape=(784,)),
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
@@ -153,12 +158,12 @@ model_p5 = tf.keras.Sequential([
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
-model_p5.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-history_p5 = model_p5.fit(X_train_p5, y_train_p5, epochs=10, validation_data=(X_test_p5, y_test_p5), verbose=0)
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history = model.fit(x_train, y_train, epochs=10, validation_data=(x_test, y_test), verbose=0)
 
 plt.figure()
-plt.plot(history_p5.history["loss"], label="Train Loss")
-plt.plot(history_p5.history["val_loss"], label="Validation Loss")
+plt.plot(history.history["loss"], label="Train Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
 plt.title("Program 5: Effect of Regularization on Loss")
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
@@ -172,9 +177,9 @@ plt.show()
 # learned filters (feature maps).
 # ==============================================================================
 print("--- Running Program 6 ---")
-(X_train_p6, y_train_p6), (X_test_p6, y_test_p6) = tf.keras.datasets.mnist.load_data()
-X_train_p6 = X_train_p6.reshape(-1, 28, 28, 1) / 255.0
-X_test_p6 = X_test_p6.reshape(-1, 28, 28, 1) / 255.0
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
+x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
 
 inputs = tf.keras.Input(shape=(28, 28, 1))
 x = tf.keras.layers.Conv2D(32, (3,3), activation='relu')(inputs)
@@ -185,15 +190,15 @@ x = tf.keras.layers.Flatten()(x)
 x = tf.keras.layers.Dense(64, activation='relu')(x)
 outputs = tf.keras.layers.Dense(10, activation='softmax')(x)
 
-model_p6 = tf.keras.Model(inputs=inputs, outputs=outputs)
-model_p6.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model_p6.fit(X_train_p6, y_train_p6, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
+model = tf.keras.Model(inputs=inputs, outputs=outputs)
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
 
 # Visualization
-layer_outputs = [layer.output for layer in model_p6.layers if isinstance(layer, tf.keras.layers.Conv2D)]
-activation_model = tf.keras.models.Model(inputs=model_p6.input, outputs=layer_outputs)
-img_p6 = X_test_p6[0].reshape(1, 28, 28, 1)
-activations = activation_model.predict(img_p6)
+layer_outputs = [layer.output for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
+activation_model = tf.keras.models.Model(inputs=model.input, outputs=layer_outputs)
+img = x_test[0].reshape(1, 28, 28, 1)
+activations = activation_model.predict(img)
 
 fig, axes = plt.subplots(1, 6, figsize=(12, 6))
 for i in range(6):
@@ -211,21 +216,21 @@ plt.show()
 print("--- Running Program 7 ---")
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-(X_train_p7, y_train_p7), (X_test_p7, y_test_p7) = tf.keras.datasets.imdb.load_data(num_words=10000)
-X_train_p7 = pad_sequences(X_train_p7, maxlen=100)
-X_test_p7 = pad_sequences(X_test_p7, maxlen=100)
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(num_words=10000)
+x_train = pad_sequences(x_train, maxlen=100)
+x_test = pad_sequences(x_test, maxlen=100)
 
-model_p7 = tf.keras.Sequential([
+model = tf.keras.Sequential([
     tf.keras.layers.Embedding(input_dim=10000, output_dim=128, input_length=100),
     tf.keras.layers.SimpleRNN(units=64, activation='relu'),
     tf.keras.layers.Dense(units=1, activation='sigmoid')
 ])
 
-model_p7.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-model_p7.fit(X_train_p7, y_train_p7, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
 
-loss_p7, acc_p7 = model_p7.evaluate(X_test_p7, y_test_p7, verbose=0)
-print(f"Program 7 - Final Test Accuracy: {acc_p7:.4f}\n")
+loss, accuracy = model.evaluate(x_test, y_test, verbose=0)
+print(f"Program 7 - Final Test Accuracy: {accuracy:.4f}\n")
 
 
 # ==============================================================================
@@ -235,12 +240,12 @@ print(f"Program 7 - Final Test Accuracy: {acc_p7:.4f}\n")
 # (adapted to CIFAR-10). Evaluate performance and visualize predictions.
 # ==============================================================================
 print("--- Running Program 8 ---")
-(X_train_p8, y_train_p8), (X_test_p8, y_test_p8) = tf.keras.datasets.cifar10.load_data()
-X_train_p8, X_test_p8 = X_train_p8 / 255.0, X_test_p8 / 255.0
-y_train_p8 = tf.keras.utils.to_categorical(y_train_p8, 10)
-y_test_p8 = tf.keras.utils.to_categorical(y_test_p8, 10)
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+y_train = tf.keras.utils.to_categorical(y_train, 10)
+y_test = tf.keras.utils.to_categorical(y_test, 10)
 
-model_p8 = tf.keras.Sequential([
+model = tf.keras.Sequential([
     tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=(32, 32, 3)),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(512, activation='relu'),
@@ -248,23 +253,23 @@ model_p8 = tf.keras.Sequential([
 ])
 
 # Freeze the VGG16 base to save time
-model_p8.layers[0].trainable = False
+model.layers[0].trainable = False
 
-model_p8.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
-model_p8.fit(X_train_p8, y_train_p8, epochs=1, validation_split=0.2, verbose=0)
+model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=1, validation_split=0.2, verbose=0)
 
-loss_p8, acc_p8 = model_p8.evaluate(X_test_p8, y_test_p8, verbose=0)
-print(f"Program 8 - Final Test Accuracy: {acc_p8:.4f}")
+loss, accuracy = model.evaluate(x_test, y_test, verbose=0)
+print(f"Program 8 - Final Test Accuracy: {accuracy:.4f}")
 
 cifar_labels = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 
                 'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
 
 num_images = 5
-random_indices = np.random.choice(len(X_test_p8), num_images, replace=False)
-selected_images = X_test_p8[random_indices]
-true_labels = y_test_p8[random_indices]
+random_indices = np.random.choice(len(x_test), num_images, replace=False)
+selected_images = x_test[random_indices]
+true_labels = y_test[random_indices]
 
-predictions = model_p8.predict(selected_images, verbose=0)
+predictions = model.predict(selected_images, verbose=0)
 predicted_classes = np.argmax(predictions, axis=1)
 
 plt.figure(figsize=(15, 5))
