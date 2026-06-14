@@ -1,450 +1,283 @@
-lab program 1 --
-
-import numpy as np
+# ==============================================================================
+# Deep Learning Lab (BAIL607) - Complete Lab Manual Code
+# ==============================================================================
 import tensorflow as tf
+import numpy as np
 import matplotlib.pyplot as plt
 
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([[0], [0], [0], [1]])
+# ==============================================================================
+# PROGRAM 1: Basic Perceptron & Binary Classification
+# Objective: Build a basic perceptron/single-layer neural network to understand 
+# fundamental mechanics and decision boundaries for binary classification.
+# ==============================================================================
+print("--- Running Program 1 ---")
+# 1. Dummy Data (Logical OR Gate)
+X_p1 = np.array([[0,0], [0,1], [1,0], [1,1]], dtype=float)
+y_p1 = np.array([[0], [1], [1], [1]], dtype=float)
 
-model = tf.keras.Sequential([tf.keras.layers.Dense(1, activation='sigmoid')])
-model.compile(optimizer=tf.keras.optimizers.SGD(0.5), loss='binary_crossentropy')
-model.fit(X, y, epochs=500, verbose=0)
+# 2. Build and Train
+model_p1 = tf.keras.Sequential([
+    tf.keras.layers.Dense(1, input_shape=(2,), activation='sigmoid')
+])
+model_p1.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model_p1.fit(X_p1, y_p1, epochs=500, verbose=0)
 
-xx, yy = np.meshgrid(np.linspace(-0.5, 1.5, 50), np.linspace(-0.5, 1.5, 50))
-predictions = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-
-plt.contourf(xx, yy, predictions, levels=[0, 0.5, 1], cmap="coolwarm", alpha=0.7)
-plt.scatter(X[:, 0], X[:, 1], c=y[:, 0], edgecolors='k', cmap="coolwarm", s=100)
-plt.show()
+# 3. Evaluate
+loss_1, acc_1 = model_p1.evaluate(X_p1, y_p1, verbose=0)
+print(f"Program 1 - Accuracy: {acc_1:.4f}\n")
 
 
+# ==============================================================================
+# PROGRAM 2: Deep Neural Network for Handwriting Recognition
+# Objective: Build a deep neural network to read handwriting using the MNIST 
+# dataset. Compile, train, evaluate, and visualize the training history.
+# ==============================================================================
+print("--- Running Program 2 ---")
+# 1. Load and Prep Data
+(X_train_p2, y_train_p2), (X_test_p2, y_test_p2) = tf.keras.datasets.mnist.load_data()
+X_train_p2 = X_train_p2.reshape(-1, 784) / 255.0
+X_test_p2 = X_test_p2.reshape(-1, 784) / 255.0
 
-lab program 2 --
-
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.model_selection import train_test_split
-
-(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-X_train, X_test = X_train / 255, X_test / 255
-
-		OR
-data = pd.read_csv('mnist.csv') 
-y = data.iloc[:, 0].values
-X = data.iloc[:, 1:].values
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-X_train = (X_train / 255.0).reshape(-1, 28, 28)
-X_test = (X_test / 255.0).reshape(-1, 28, 28)
-
-model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(28, 28)),
-    tf.keras.layers.Dense(128, activation='relu'),
+# 2. Build Model
+model_p2 = tf.keras.Sequential([
+    tf.keras.layers.Dense(128, activation='relu', input_shape=(784,)),
+    tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(X_train, y_train, epochs=5)
+# 3. Compile and Train
+model_p2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history_p2 = model_p2.fit(X_train_p2, y_train_p2, epochs=10, batch_size=32, validation_split=0.2, verbose=0)
 
-loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
-print(f"Test Accuracy: {accuracy:.4f}")
+# 4. Evaluate and Plot
+loss_p2, acc_p2 = model_p2.evaluate(X_test_p2, y_test_p2, verbose=0)
+print(f"Program 2 - Test Accuracy: {acc_p2:.4f}")
 
-predictions = np.argmax(model.predict(X_test[:5]), axis=1)
-fig, axes = plt.subplots(1, 5, figsize=(10, 3))
-for i in range(5):
-    axes[i].imshow(X_test[i], cmap='gray')
-    axes[i].set_title(f"Pred: {predictions[i]} | True: {y_test[i]}")
-    axes[i].axis('off')
-plt.show()
-
-
-
-
-
-lab program 3 --
-
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-
-
-data = pd.read_csv('mnist.csv') 
-y = data.iloc[:, 0].values
-X = data.iloc[:, 1:].values
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-X_train = (X_train / 255.0).reshape(-1, 28, 28)
-X_test = (X_test / 255.0).reshape(-1, 28, 28)
-
-			OR
-
-(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-X_train, X_test = X_train / 255.0, X_test / 255.0
-
-activations = ['sigmoid', 'tanh', 'relu']
-histories = {}
-
-for func in activations:
-    print(f"Training with {func}...")
-    model = tf.keras.Sequential([
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
-        tf.keras.layers.Dense(128, activation=func),
-        tf.keras.layers.Dense(10, activation='softmax')
-    ])
-    
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    histories[func] = model.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test), verbose=0)
-
-for func in activations:
-    plt.plot(histories[func].history['val_accuracy'], label=func)
-
-plt.title("Activation Functions Comparison")
-plt.xlabel("Epochs (Time)")
-plt.ylabel("Validation Accuracy")
+plt.figure()
+plt.plot(history_p2.history['accuracy'], label='Train Accuracy')
+plt.plot(history_p2.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Program 2: Model Accuracy')
 plt.legend()
 plt.show()
 
 
+# ==============================================================================
+# PROGRAM 3: Activation Functions Showdown
+# Objective: Explore how different activation functions (Sigmoid, ReLU, and Tanh) 
+# affect a neural network's ability to learn using the MNIST dataset.
+# ==============================================================================
+print("--- Running Program 3 ---")
+def create_model_p3(af):
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(128, activation=af, input_shape=(784,)),
+        tf.keras.layers.Dense(64, activation=af),
+        tf.keras.layers.Dense(10, activation='softmax')
+    ])
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-lab program 4 --
+activation_functions = ['sigmoid', 'tanh', 'relu']
+results_p3 = {}
 
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+for activation in activation_functions:
+    print(f"Training with {activation}...")
+    model = create_model_p3(activation)
+    history = model.fit(X_train_p2, y_train_p2, epochs=5, batch_size=32, validation_data=(X_test_p2, y_test_p2), verbose=0)
+    results_p3[activation] = history
+
+plt.figure(figsize=(10, 6))
+for activation in activation_functions:
+    plt.plot(results_p3[activation].history['val_accuracy'], label=f"{activation} Validation")
+plt.title('Program 3: Activation Function Showdown')
+plt.xlabel('Epochs')
+plt.ylabel('Validation Accuracy')
+plt.legend()
+plt.show()
 
 
-data = pd.read_csv('cifar10.csv') 
-y = data.iloc[:, 0].values
-X = data.iloc[:, 1:].values
+# ==============================================================================
+# PROGRAM 4: The Optimizers (SGD vs. RMSprop vs. Adam)
+# Objective: Build a CNN to classify color images from the CIFAR-10 dataset, 
+# and compare three different optimizers (SGD, Adam, RMSprop).
+# ==============================================================================
+print("--- Running Program 4 ---")
+(X_train_p4, y_train_p4), (X_test_p4, y_test_p4) = tf.keras.datasets.cifar10.load_data()
+X_train_p4, X_test_p4 = X_train_p4 / 255.0, X_test_p4 / 255.0
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-X_train = (X_train / 255.0).reshape(-1, 32, 32, 3)
-X_test = (X_test / 255.0).reshape(-1, 32, 32, 3)
-
-			OR
-
-(X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
-X_train, X_test = X_train / 255.0, X_test / 255.0
-
-optimizers = ['sgd', 'rmsprop', 'adam']
-histories = {}
-
-for opt in optimizers:
-    print(f"Training with {opt}...")
+def build_and_train_p4(optimizer_name):
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(32, 32, 3)),
-        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.MaxPooling2D((2,2)),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(128, activation='relu'),
         tf.keras.layers.Dense(10, activation='softmax')
     ])
-    
-    model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    histories[opt] = model.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test), verbose=0)
+    model.compile(optimizer=optimizer_name, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    history = model.fit(X_train_p4, y_train_p4, epochs=5, batch_size=64, validation_data=(X_test_p4, y_test_p4), verbose=0)
+    return history
+
+optimizers = ['sgd', 'rmsprop', 'adam']
+histories_p4 = {}
 
 for opt in optimizers:
-    plt.plot(histories[opt].history['val_accuracy'], label=opt)
+    print(f"Training with {opt}...")
+    histories_p4[opt] = build_and_train_p4(opt)
 
-plt.title("Optimizer Comparison (CIFAR-10)")
-plt.xlabel("Epochs")
-plt.ylabel("Validation Accuracy")
+plt.figure(figsize=(10, 6))
+for name in optimizers:
+    plt.plot(histories_p4[name].history['val_accuracy'], label=f'{name.upper()} Val', linestyle='--')
+plt.title('Program 4: Optimizer Race')
+plt.xlabel('Epoch')
+plt.ylabel('Validation Accuracy')
 plt.legend()
 plt.show()
 
 
+# ==============================================================================
+# PROGRAM 5: Regularization Lifeguards (L2 & Dropout)
+# Objective: Apply L2 Regularization and Dropout to a neural network to prevent 
+# overfitting on the Fashion MNIST dataset.
+# ==============================================================================
+print("--- Running Program 5 ---")
+(X_train_p5, y_train_p5), (X_test_p5, y_test_p5) = tf.keras.datasets.fashion_mnist.load_data()
+X_train_p5 = X_train_p5.reshape(-1, 784) / 255.0
+X_test_p5 = X_test_p5.reshape(-1, 784) / 255.0
 
-lab program 5 --
-
-import tensorflow as tf
-import matplotlib.pyplot as plt
-
-train_df = pd.read_csv("fashion_mnist_train.csv")
-test_df = pd.read_csv("fashion_mnist_test.csv")
-
-y_train = train_df.iloc[:, 0].values
-X_train = train_df.iloc[:, 1:].values
-y_test = test_df.iloc[:, 0].values
-X_test = test_df.iloc[:, 1:].values
-
-X_train = (X_train / 255.0).reshape(-1, 28, 28)
-X_test = (X_test / 255.0).reshape(-1, 28, 28)
-
-			OR
-
-(X_train, y_train), (X_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
-X_train, X_test = X_train / 255.0, X_test / 255.0
-
-model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(28, 28)),
-    tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
+model_p5 = tf.keras.Sequential([
+    tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(1e-4), input_shape=(784,)),
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(1e-4)),
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-history = model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test), verbose=0)
+model_p5.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history_p5 = model_p5.fit(X_train_p5, y_train_p5, epochs=10, validation_data=(X_test_p5, y_test_p5), verbose=0)
 
-plt.plot(history.history['loss'], label="Train Loss")
-plt.plot(history.history['val_loss'], label="Validation Loss")
-plt.title("Effect of Regularization on Loss")
+plt.figure()
+plt.plot(history_p5.history["loss"], label="Train Loss")
+plt.plot(history_p5.history["val_loss"], label="Validation Loss")
+plt.title("Program 5: Effect of Regularization on Loss")
 plt.xlabel("Epochs")
-plt.ylabel("Loss (Error)")
+plt.ylabel("Loss")
 plt.legend()
 plt.show()
 
 
-lab program 6 --
+# ==============================================================================
+# PROGRAM 6: Convolutional Neural Network (CNN) for Image Recognition
+# Objective: Build a CNN for Image Recognition on MNIST and visualize the 
+# learned filters (feature maps).
+# ==============================================================================
+print("--- Running Program 6 ---")
+(X_train_p6, y_train_p6), (X_test_p6, y_test_p6) = tf.keras.datasets.mnist.load_data()
+X_train_p6 = X_train_p6.reshape(-1, 28, 28, 1) / 255.0
+X_test_p6 = X_test_p6.reshape(-1, 28, 28, 1) / 255.0
 
-import tensorflow as tf
-import matplotlib.pyplot as plt
+inputs = tf.keras.Input(shape=(28, 28, 1))
+x = tf.keras.layers.Conv2D(32, (3,3), activation='relu')(inputs)
+x = tf.keras.layers.MaxPooling2D((2,2))(x)
+x = tf.keras.layers.Conv2D(64, (3,3), activation='relu')(x)
+x = tf.keras.layers.MaxPooling2D((2,2))(x)
+x = tf.keras.layers.Flatten()(x)
+x = tf.keras.layers.Dense(64, activation='relu')(x)
+outputs = tf.keras.layers.Dense(10, activation='softmax')(x)
 
-(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-			OR
-from sklearn.model_selection import train_test_split
-data = pd.read_csv("mnist.csv") 
-y = data.iloc[:, 0].values
-X = data.iloc[:, 1:].values
+model_p6 = tf.keras.Model(inputs=inputs, outputs=outputs)
+model_p6.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model_p6.fit(X_train_p6, y_train_p6, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Visualization
+layer_outputs = [layer.output for layer in model_p6.layers if isinstance(layer, tf.keras.layers.Conv2D)]
+activation_model = tf.keras.models.Model(inputs=model_p6.input, outputs=layer_outputs)
+img_p6 = X_test_p6[0].reshape(1, 28, 28, 1)
+activations = activation_model.predict(img_p6)
 
-X_train = X_train.reshape(-1, 28, 28, 1) / 255.0
-X_test = X_test.reshape(-1, 28, 28, 1) / 255.0
+fig, axes = plt.subplots(1, 6, figsize=(12, 6))
+for i in range(6):
+    axes[i].imshow(activations[0][0, :, :, i], cmap='viridis')
+    axes[i].axis('off')
+plt.suptitle('Program 6: CNN Filter Visualizations')
+plt.show()
 
-model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(28, 28, 1)),
-    tf.keras.layers.MaxPooling2D((2,2)),
-    tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
-    tf.keras.layers.MaxPooling2D((2,2)),
+
+# ==============================================================================
+# PROGRAM 7: Recurrent Neural Networks (RNNs) for Text
+# Objective: Build an RNN to perform sentiment analysis (classifying text 
+# as positive or negative) using the IMDB dataset.
+# ==============================================================================
+print("--- Running Program 7 ---")
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+(X_train_p7, y_train_p7), (X_test_p7, y_test_p7) = tf.keras.datasets.imdb.load_data(num_words=10000)
+X_train_p7 = pad_sequences(X_train_p7, maxlen=100)
+X_test_p7 = pad_sequences(X_test_p7, maxlen=100)
+
+model_p7 = tf.keras.Sequential([
+    tf.keras.layers.Embedding(input_dim=10000, output_dim=128, input_length=100),
+    tf.keras.layers.SimpleRNN(units=64, activation='relu'),
+    tf.keras.layers.Dense(units=1, activation='sigmoid')
+])
+
+model_p7.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model_p7.fit(X_train_p7, y_train_p7, epochs=3, batch_size=64, validation_split=0.2, verbose=0)
+
+loss_p7, acc_p7 = model_p7.evaluate(X_test_p7, y_test_p7, verbose=0)
+print(f"Program 7 - Final Test Accuracy: {acc_p7:.4f}\n")
+
+
+# ==============================================================================
+# PROGRAM 8: Transfer Learning (VGG16)
+# Objective: Understand how to use pre-trained models for transfer learning.
+# Load a pre-trained model (VGG16). Fine-tune the model on a custom dataset 
+# (adapted to CIFAR-10). Evaluate performance and visualize predictions.
+# ==============================================================================
+print("--- Running Program 8 ---")
+(X_train_p8, y_train_p8), (X_test_p8, y_test_p8) = tf.keras.datasets.cifar10.load_data()
+X_train_p8, X_test_p8 = X_train_p8 / 255.0, X_test_p8 / 255.0
+y_train_p8 = tf.keras.utils.to_categorical(y_train_p8, 10)
+y_test_p8 = tf.keras.utils.to_categorical(y_test_p8, 10)
+
+model_p8 = tf.keras.Sequential([
+    tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=(32, 32, 3)),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(512, activation='relu'),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(X_train, y_train, epochs=3, validation_data=(X_test, y_test), verbose=0)
+# Freeze the VGG16 base to save time
+model_p8.layers[0].trainable = False
 
-loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
-print(f"Test Accuracy: {accuracy:.4f}")
+model_p8.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
+model_p8.fit(X_train_p8, y_train_p8, epochs=1, validation_split=0.2, verbose=0)
 
-activation_model = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[0].output)
-activations = activation_model.predict(X_test[0].reshape(1, 28, 28, 1))
+loss_p8, acc_p8 = model_p8.evaluate(X_test_p8, y_test_p8, verbose=0)
+print(f"Program 8 - Final Test Accuracy: {acc_p8:.4f}")
 
-fig, axes = plt.subplots(1, 6, figsize=(12, 3))
-for i in range(6):
-    axes[i].imshow(activations[0, :, :, i], cmap='viridis')
-    axes[i].axis('off')
-plt.show()
+cifar_labels = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 
+                'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
 
+num_images = 5
+random_indices = np.random.choice(len(X_test_p8), num_images, replace=False)
+selected_images = X_test_p8[random_indices]
+true_labels = y_test_p8[random_indices]
 
-lab 7 --
+predictions = model_p8.predict(selected_images, verbose=0)
+predicted_classes = np.argmax(predictions, axis=1)
 
-import pandas as pd
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, SimpleRNN, Dense
-from tensorflow.keras.utils import to_categorical
-
-data = pd.read_csv("text_data.csv")
-y = data.iloc[:, 0].values  
-texts = data.iloc[:, 1].values 
-
-tokenizer = Tokenizer(num_words=10000)
-tokenizer.fit_on_texts(texts)
-X = pad_sequences(tokenizer.texts_to_sequences(texts), maxlen=100)
-y = to_categorical(y) 
-
-model = Sequential([
-    Embedding(input_dim=10000, output_dim=128, input_length=100),
-    SimpleRNN(64, activation='relu'),
-    Dense(len(y[0]), activation='softmax')
-])
-
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-model.fit(X, y, epochs=5, batch_size=32, validation_split=0.2)
-
-loss, accuracy = model.evaluate(X, y)
-print(f"Test Accuracy: {accuracy:.4f}")
-
-
-
-Lab program 7 --
-
-import pandas as pd, numpy as np, matplotlib.pyplot as plt
-from keras.preprocessing.text import Tokenizer
-from keras.utils import pad_sequences, to_categorical
-from keras.models import Sequential
-from keras.layers import Dense, SimpleRNN, Embedding
-
-train_ds = pd.read_csv('8train.csv', encoding='latin1')
-test_ds = pd.read_csv('8test.csv', encoding='latin1')
-
-label_map = lambda x: 0 if x == 'positive' else (1 if x == 'negative' else 2)
-y_train = to_categorical(train_ds['sentiment'].apply(label_map), 3)
-y_test  = to_categorical(test_ds['sentiment'].apply(label_map), 3)
-
-x_train = train_ds['text'].fillna('').astype(str)
-x_test = test_ds['text'].fillna('').astype(str)
-
-tokenizer = Tokenizer(num_words=20000)
-tokenizer.fit_on_texts(x_train)
-tokenizer.fit_on_texts(x_test)
-
-x_train = pad_sequences(tokenizer.texts_to_sequences(x_train), padding='post', maxlen=35)
-x_test  = pad_sequences(tokenizer.texts_to_sequences(x_test), padding='post', maxlen=35)
-
-model = Sequential([
-    Embedding(input_dim=20000, output_dim=5, input_length=35),
-    SimpleRNN(32),
-    Dense(3, activation='softmax')
-])
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-history = model.fit(x_train, y_train, epochs=10, validation_data=(x_test, y_test), verbose=1)
-
-plt.plot(history.history['accuracy'], label='Train Acc')
-plt.plot(history.history['val_accuracy'], label='Val Acc')
-plt.legend()
-plt.show()
-
-def predict_sentiment(text):
-    seq = pad_sequences(tokenizer.texts_to_sequences([text]), padding='post', maxlen=35)
-    idx = np.argmax(model.predict(seq, verbose=0), axis=-1)[0]
-    return "Positive Sentiment" if idx == 0 else ("Negative Sentiment" if idx == 1 else "Neutral Sentiment")
-
-print(predict_sentiment("The movie was bad bad bad, i will not recommend this movie to anyone"))
-print(predict_sentiment("The movie was good, i will recommend this movie to anyone"))
-
-
-
-
-lab program 8 --
-
-import numpy as np, glob, cv2, matplotlib.pyplot as plt
-from keras.applications.vgg16 import VGG16
-from keras.models import Sequential
-from keras.layers import Flatten, Dense
-
-classes = ['daisy', 'dandelion', 'rose', 'tulip', 'sunflower']
-train_data = []
-
-for f in glob.glob('../input/flowers/*/*.jpg'):
-    label = [1 if c in f else 0 for c in classes] 
-    img = cv2.resize(cv2.imread(f), (224, 224))
-    train_data.append([img, label])
-
-np.random.shuffle(train_data)
-X = np.array([i[0] for i in train_data]) / 255.0
-Y = np.array([i[1] for i in train_data])
-
-model = Sequential([
-    VGG16(include_top=False, weights='imagenet', input_shape=(224, 224, 3)),
-    Flatten(),
-    Dense(512, activation='relu'),
-    Dense(5, activation='softmax')
-])
-
-model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-model.fit(X, Y, epochs=1, validation_split=0.30, verbose=1)
-
-loss, accuracy = model.evaluate(X, Y, verbose=0)
-print(f"Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
-
-idx = np.random.choice(len(X), 5, replace=False)
-preds = np.argmax(model.predict(X[idx]), axis=1)
-trues = np.argmax(Y[idx], axis=1)
-
-fig, axes = plt.subplots(1, 5, figsize=(12, 3))
-for i in range(5):
-    axes[i].imshow(X[idx][i])
-    axes[i].set_title(f"A: {classes[trues[i]]}\nP: {classes[preds[i]]}")
-    axes[i].axis('off')
-plt.show()
-
-
-Open ended program --
-
-#!pip install kagglehub pandas numpy matplotlib scikit-learn tensorflow
-
-import os
-import kagglehub
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-
-# 1. Download & Load Dataset
-path = kagglehub.dataset_download("sayeeduddin/netflix-2025user-behavior-dataset-21")
-csv_path = os.path.join(path, "users.csv")
-
-# Load it and safely drop any identifiers if they exist
-df = pd.read_csv(csv_path).drop(columns=['user_id', 'email', 'first_name', 'last_name'], errors='ignore')
-
-# 2. Preprocessing
-target_col = 'is_active'
-df.fillna(df.median(numeric_only=True), inplace=True) # Impute numerics
-df.fillna(df.mode().iloc[0], inplace=True)            # Impute categoricals
-
-X = pd.get_dummies(df.drop(columns=[target_col]), drop_first=True)
-y = df[target_col]
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# 3. Experimentation Loop
-experiments = [
-    {"d": 1, "act": "relu", "lr": 0.001, "bs": 32},  # Baseline
-    {"d": 3, "act": "relu", "lr": 0.001, "bs": 32},  # Deeper
-    {"d": 1, "act": "tanh", "lr": 0.001, "bs": 32},  # Tanh Act
-    {"d": 1, "act": "relu", "lr": 0.01,  "bs": 32},  # High LR
-    {"d": 1, "act": "relu", "lr": 0.001, "bs": 128}, # Large Batch
-]
-
-results = {}
-cb = [EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)]
-
-print("\nStarting Hyperparameter Evaluation...")
-
-for exp in experiments:
-    name = f"D{exp['d']}_{exp['act']}_LR{exp['lr']}_B{exp['bs']}"
-    print(f"Training: {name}...")
+plt.figure(figsize=(15, 5))
+for i in range(num_images):
+    plt.subplot(1, num_images, i + 1)
+    plt.imshow(selected_images[i])
+    plt.axis('off')
     
-    # Build & Compile Model
-    layers = [Input(shape=(X_train.shape[1],))]
-    for _ in range(exp['d']):
-        layers.append(Dense(64, activation=exp['act']))
-    layers.append(Dense(1, activation='sigmoid'))
-    
-    model = Sequential(layers)
-    model.compile(optimizer=Adam(learning_rate=exp['lr']), loss='binary_crossentropy', metrics=['accuracy'])
-    
-    # Train & Evaluate
-    hist = model.fit(X_train, y_train, epochs=15, batch_size=exp['bs'], validation_split=0.2, callbacks=cb, verbose=0)
-    results[name] = {"history": hist.history, "test": model.evaluate(X_test, y_test, verbose=0)}
+    actual = cifar_labels[np.argmax(true_labels[i])]
+    predicted = cifar_labels[predicted_classes[i]]
+    color = 'green' if actual == predicted else 'red'
+    plt.title(f"Actual: {actual}\nPred: {predicted}", fontsize=12, color=color)
 
-# 4. Results & Visualization
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-print("\n=== Final Test Set Accuracies ===")
-
-for name, res in results.items():
-    ax1.plot(res["history"]["loss"], label=name)
-    ax2.plot(res["history"]["val_accuracy"], label=name)
-    print(f"{name}: Acc = {res['test'][1]:.4f}, Loss = {res['test'][0]:.4f}")
-
-ax1.set(title="Training Loss", xlabel="Epochs", ylabel="Loss")
-ax1.legend()
-ax2.set(title="Validation Accuracy", xlabel="Epochs", ylabel="Accuracy")
-ax2.legend()
+plt.suptitle('Program 8: VGG16 Transfer Learning Predictions')
 plt.tight_layout()
 plt.show()
